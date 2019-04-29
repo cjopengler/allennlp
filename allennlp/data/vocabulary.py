@@ -396,6 +396,8 @@ class Vocabulary(Registrable):
         for instance in Tqdm.tqdm(instances):
             instance.count_vocab_items(namespace_token_counts)
 
+        print("name space token counts: ", namespace_token_counts)
+
         return cls(counter=namespace_token_counts,
                    min_count=min_count,
                    max_vocab_size=max_vocab_size,

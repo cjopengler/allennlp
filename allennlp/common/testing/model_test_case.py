@@ -71,7 +71,9 @@ class ModelTestCase(AllenNlpTestCase):
         """
         save_dir = self.TEST_DIR / "save_and_load_test"
         archive_file = save_dir / "model.tar.gz"
+
         model = train_model_from_file(param_file, save_dir, overrides=overrides)
+
         loaded_model = load_archive(archive_file, cuda_device=cuda_device).model
         state_keys = model.state_dict().keys()
         loaded_state_keys = loaded_model.state_dict().keys()
