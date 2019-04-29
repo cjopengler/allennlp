@@ -10,7 +10,7 @@
 Authors: panxu(panxu@baidu.com)
 Date:    2019/04/23 13:48:00
 """
-from typing import Dict
+from typing import Dict, List, Any
 
 import numpy as np
 import torch
@@ -58,6 +58,7 @@ class PersonNameClassifier(Model):
 
     def forward(self,
                 name: Dict[str, torch.LongTensor],
+                metadata: List[Dict[str, Any]] = None,
                 label: torch.LongTensor = None) -> Dict[str, torch.Tensor]:
 
         name_embedding = self._text_embedder(name)
@@ -76,6 +77,8 @@ class PersonNameClassifier(Model):
             for metric in self._metric.values():
                 metric(logits, label)
 
+        if metadata is not None:
+            output_dict["name"] = [x["name"] for x in metadata]
         return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:

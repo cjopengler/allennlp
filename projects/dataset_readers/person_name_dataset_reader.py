@@ -17,6 +17,7 @@ from allennlp.data import DatasetReader
 from allennlp.data.tokenizers import Tokenizer
 from allennlp.data.fields import TextField
 from allennlp.data.fields import LabelField
+from allennlp.data.fields import MetadataField
 from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data import Instance
 
@@ -44,7 +45,8 @@ class PersonNameDatasetReader(DatasetReader):
         name_field = TextField(tokens=name_tokens,
                                token_indexers={"characters": SingleIdTokenIndexer(namespace="tokens")})
 
-        fields = {"name": name_field}
+        fields = {"name": name_field,
+                  "metadata": MetadataField({"name": name})}
 
         if label is not None:
             label_field = LabelField(label=label,

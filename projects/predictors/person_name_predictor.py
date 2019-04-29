@@ -12,8 +12,8 @@ Date:    2019/04/27 21:35:00
 """
 
 from allennlp.predictors import Predictor
-from common import JsonDict
-from data import Instance
+from allennlp.common import JsonDict
+from allennlp.data import Instance
 
 
 @Predictor.register("PersonNamePredictor")
