@@ -13,3 +13,4 @@ Date:    2019/04/21 07:36:00
 
 from .academic_paper_classifier import AcademicPaperClassifier
 from .person_name_classifier import PersonNameClassifier
+from .trigger_detection_model import TriggerDetectionModel

@@ -10,3 +10,5 @@ brief
 Authors: panxu(panxu@baidu.com)
 Date:    2019/04/26 18:45:00
 """
+
+from .split_dataset import SplitDataset
