@@ -21,6 +21,7 @@
     "model": {
         "type": "TriggerDetectionModel",
 
+
         "sentence_embedder" : {
             "type": "basic",
             "token_embedders": {
@@ -40,7 +41,10 @@
             "num_layers": 2,
             "dropout": 0.2,
             "bidirectional": true
-        }
+        },
+
+        "label_encoding": "BIO",
+        "label_namespace": "labels" # 与label_field的name_space是一样的
     },
 
     "iterator": {
@@ -51,7 +55,7 @@
     "trainer": {
         "validation_metric": "+accuracy",
         "optimizer": "adam",
-        "num_epochs": 10,
+        "num_epochs": 32,
         "patience": 10,
         "cuda_device": -1
     }

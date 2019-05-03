@@ -14,19 +14,31 @@ from typing import Dict, List, Any
 
 import numpy as np
 import torch
+
 from torch.nn import Linear
 import torch.nn.functional as F
 
 from allennlp.data import Vocabulary
 from allennlp.models import Model
+
+
 from allennlp.nn import RegularizerApplicator
 from allennlp.nn import InitializerApplicator
+
 from allennlp.modules import TextFieldEmbedder
 from allennlp.modules import TimeDistributed
 from allennlp.modules.seq2seq_encoders import Seq2SeqEncoder
+from allennlp.modules import ConditionalRandomField
+from allennlp.modules.conditional_random_field import allowed_transitions
+
 from allennlp.nn.util import get_text_field_mask
 from allennlp.nn.util import sequence_cross_entropy_with_logits
+
 from allennlp.training.metrics import CategoricalAccuracy
+from allennlp.training.metrics import SpanBasedF1Measure
+from allennlp.training.metrics import Metric
+
+from allennlp.common import Params
 
 
 @Model.register("TriggerDetectionModel")
@@ -36,8 +48,21 @@ class TriggerDetectionModel(Model):
                  vocab: Vocabulary,
                  sentence_embedder: TextFieldEmbedder,
                  encoder: Seq2SeqEncoder,
+                 label_encoding: str,
+                 label_namespace: str,
+                 constrain_crf_decoding: bool = True,
                  initializer: InitializerApplicator = InitializerApplicator(),
                  regularizer: RegularizerApplicator = None):
+        """
+        初始化
+        :param vocab:
+        :param sentence_embedder:
+        :param encoder:
+        :param calculate_span_f1: 是否计算f1 metric
+        :param constrain_crf_decoding: 对crf decoding做限制
+        :param initializer:
+        :param regularizer:
+        """
 
         super().__init__(vocab=vocab,
                          regularizer=regularizer)
@@ -51,8 +76,38 @@ class TriggerDetectionModel(Model):
 
         self._metric = {"accuracy": CategoricalAccuracy()}
 
+        self._f1_metric = SpanBasedF1Measure(vocabulary=vocab,
+                                             tag_namespace=label_namespace,
+                                             label_encoding=label_encoding)
+
+        # 增加crf
+
+        constraints = None
+        if constrain_crf_decoding:
+            constraints = allowed_transitions(label_encoding,
+                                              vocab.get_index_to_token_vocabulary(label_namespace))
+
+        self._crf = ConditionalRandomField(num_tags=self._num_class,
+                                           constraints=constraints,
+                                           include_start_end_transitions=True)
 
         initializer(self)
+
+    # @classmethod
+    # def from_params(cls, vocab: Vocabulary, params: Params, **extras) -> "TriggerDetectionModel":
+    #
+    #     sentence_embedder = TextFieldEmbedder.from_params(params.pop("sentence_embedder"),
+    #                                                       vocab=vocab)
+    #     encoder = Seq2SeqEncoder.from_params(params.pop("encoder"),
+    #                                          vocab=vocab)
+    #     f1_measure = Metric.from_params(params.pop("f1_measure"),
+    #                                     vocabulary=vocab)
+    #
+    #     return cls(vocab=vocab,
+    #                sentence_embedder=sentence_embedder,
+    #                encoder=encoder,
+    #                f1_measure=f1_measure)
+
 
     def forward(self,
                 sentence: Dict[str, torch.Tensor],
@@ -97,6 +152,11 @@ class TriggerDetectionModel(Model):
             for _, metric in self._metric.items():
                 metric(logits, labels, sentence_mask)
 
+            if self._f1_metric:
+                self._f1_metric(logits,
+                                labels,
+                                sentence_mask)
+
         if metadata is not None:
             output_dict["sentence"] = [x["sentence"] for x in metadata]
 
@@ -109,6 +169,9 @@ class TriggerDetectionModel(Model):
 
         for metric_name, metric in self._metric.items():
             metric_result[metric_name] = metric.get_metric(reset)
+
+        if self._f1_metric:
+            metric_result.update(self._f1_metric.get_metric(reset))
 
         return metric_result
 
