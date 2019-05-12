@@ -13,3 +13,4 @@ Date:    2019/04/27 19:26:00
 
 from .paper_classifier_predictor import PaperClassifierPredictor
 from .person_name_predictor import PersonNamePredictor
+from .trigger_detection_predictor import TriggerDetectionPredictor

@@ -44,7 +44,8 @@
         },
 
         "label_encoding": "BIO",
-        "label_namespace": "labels" # 与label_field的name_space是一样的
+        "label_namespace": "labels", # 与label_field的name_space是一样的
+        "crf": true # 暂时关闭crf
     },
 
     "iterator": {
